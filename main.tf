@@ -72,19 +72,25 @@ resource "aws_lambda_function" "example" {
   role          = aws_iam_role.lambda_exec.arn
   handler       = "lambda_function.lambda_handler"
   runtime       = "python3.8"
-  
 }
-
 
 resource "aws_apigatewayv2_api" "example" {
   name          = "example_api"
   protocol_type = "HTTP"
 }
 
+resource "aws_lambda_permission" "allow_apigateway_invoke" {
+  statement_id  = "AllowExecutionFromAPIGateway"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.example.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = aws_apigatewayv2_api.example.execution_arn
+}
+
 resource "aws_apigatewayv2_integration" "example" {
-  api_id            = aws_apigatewayv2_api.example.id
-  integration_type  = "AWS_PROXY"
-  integration_uri   = aws_lambda_function.example.invoke_arn
+  api_id             = aws_apigatewayv2_api.example.id
+  integration_type   = "AWS_PROXY"
+  integration_uri    = aws_lambda_function.example.invoke_arn
   integration_method = "POST"
 }
 
@@ -93,7 +99,6 @@ resource "aws_apigatewayv2_route" "example" {
   route_key = "$default"
   target    = "integrations/${aws_apigatewayv2_integration.example.id}"
 }
-
 
 resource "aws_iam_role" "lambda_exec" {
   name = "lambda-exec-role"
@@ -128,7 +133,6 @@ resource "aws_iam_role" "api_gateway_role" {
     ]
   })
 }
-
 
 terraform {
   backend "s3" {
