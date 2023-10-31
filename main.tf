@@ -28,7 +28,7 @@ resource "aws_subnet" "private" {
 resource "aws_internet_gateway" "example" {
   vpc_id = aws_vpc.example.id
   tags = {
-    Name = "INTGW"
+    Name = "INGW"
   }
 }
 
@@ -40,7 +40,7 @@ resource "aws_route_table" "public" {
     gateway_id = aws_internet_gateway.example.id
   }
   tags = {
-    Name = "RT"
+    Name = "RTB"
   }
 }
 
@@ -59,25 +59,52 @@ resource "aws_nat_gateway" "example" {
 
 resource "aws_eip" "example" {}
 
-# Add the lambda resource here
+data "archive_file" "lambda_zip" {
+  type        = "zip"
+  source_dir  = "${path.module}/python/"  # Path to the directory containing your Lambda code
+  output_path = "${path.module}/python/lambda_function.zip"
+}
+
+
 resource "aws_lambda_function" "example" {
   function_name = "MyLambdafunction"
-  filename      = "lambda_function.zip"
-  role = aws_iam_role.lambda_exec.arn
-  handler = "lambda_function.lambda_handler"
-  runtime = "python3.8"
+  filename      = data.archive_file.lambda_zip.output_path
+  role          = aws_iam_role.lambda_exec.arn
+  handler       = "lambda_function.lambda_handler"
+  runtime       = "python3.8"
+  invoke_arn    = aws_lambda_function.example.arn
 }
+
+
+resource "aws_apigatewayv2_api" "example" {
+  name          = "example_api"
+  protocol_type = "HTTP"
+}
+
+resource "aws_apigatewayv2_integration" "example" {
+  api_id            = aws_apigatewayv2_api.example.id
+  integration_type  = "AWS_PROXY"
+  integration_uri   = aws_lambda_function.example.invoke_arn
+  integration_method = "POST"
+}
+
+resource "aws_apigatewayv2_route" "example" {
+  api_id    = aws_apigatewayv2_api.example.id
+  route_key = "$default"
+  target    = "integrations/${aws_apigatewayv2_integration.example.id}"
+}
+
 
 resource "aws_iam_role" "lambda_exec" {
   name = "lambda-exec-role"
 
   assume_role_policy = jsonencode({
-    Version = "2012-10-17"
+    Version   = "2012-10-17"
     Statement = [
       {
         Action = "sts:AssumeRole"
         Effect = "Allow"
-        Sid = ""
+        Sid    = ""
         Principal = {
           Service = "lambda.amazonaws.com"
         }
@@ -86,6 +113,23 @@ resource "aws_iam_role" "lambda_exec" {
   })
 }
 
+resource "aws_iam_role" "api_gateway_role" {
+  name = "api_gateway_role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole",
+        Effect = "Allow",
+        Principal = {
+          Service = "apigateway.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+
 terraform {
   backend "s3" {
     bucket = "terraformstatfile"  # Replace with your bucket name
@@ -93,4 +137,3 @@ terraform {
     region = "us-east-1"  # Replace with your preferred region
   }
 }
-
