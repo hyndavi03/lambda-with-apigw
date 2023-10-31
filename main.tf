@@ -63,7 +63,6 @@ resource "aws_eip" "example" {}
 resource "aws_lambda_function" "example" {
   function_name = "MyLambdaFunction"
   filename      = "lambda_function.zip"
-  source_code_hash = filebase64sha256("lambda_function.zip")
   role = aws_iam_role.lambda_exec.arn
   handler = "lambda_function.lambda_handler"
   runtime = "python3.8"
@@ -89,9 +88,9 @@ resource "aws_iam_role" "lambda_exec" {
 
 terraform {
   backend "s3" {
-    bucket = "terraformstfile"  # Replace with your bucket name
+    bucket = "terraformstatfile"  # Replace with your bucket name
     key    = "terraform.tfstate"
-    region = "us-west-2"  # Replace with your preferred region
+    region = "us-east-1"  # Replace with your preferred region
   }
 }
 
