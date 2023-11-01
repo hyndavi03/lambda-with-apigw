@@ -86,12 +86,3 @@ resource "aws_apigatewayv2_stage" "example" {
   auto_deploy     = true
   deployment_id   = aws_apigatewayv2_deployment.example.id
 }
-
-terraform {
-  required_version = ">= 1.0.0"
-  backend "s3" {
-    bucket = "terraformstatfile"
-    key    = "terraform.tfstate"
-    region = "us-east-1"
-  }
-}
