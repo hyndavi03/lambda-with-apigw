@@ -9,7 +9,7 @@ data "archive_file" "lambda_zip" {
 }
 
 resource "aws_lambda_function" "example" {
-  function_name = "MyLambdafunction"
+  function_name = "MyLambdaFunction"
   filename      = data.archive_file.lambda_zip.output_path
   role          = aws_iam_role.lambda_exec.arn
   handler       = "lambda_function.lambda_handler"
@@ -76,22 +76,16 @@ resource "aws_apigatewayv2_route" "example_route" {
 }
 
 resource "aws_apigatewayv2_deployment" "example" {
+  count       = length(aws_apigatewayv2_route.example_route) > 0 ? 1 : 0
   api_id      = aws_apigatewayv2_api.example.id
   description = "Example deployment"
+  depends_on  = [aws_apigatewayv2_route.example_route]
 }
 
 resource "aws_apigatewayv2_stage" "example" {
+  count         = length(aws_apigatewayv2_deployment.example) > 0 ? 1 : 0
   api_id        = aws_apigatewayv2_api.example.id
   name          = "test"
   auto_deploy   = true
-  deployment_id = aws_apigatewayv2_deployment.example.id
-}
-
-terraform {
-  required_version = ">= 1.0.0"
-  backend "s3" {
-    bucket = "terraformstatfile"
-    key    = "terraform.tfstate"
-    region = "us-east-1"
-  }
+  deployment_id = aws_apigatewayv2_deployment.example[0].id
 }
