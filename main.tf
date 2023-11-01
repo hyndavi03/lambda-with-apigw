@@ -71,7 +71,7 @@ resource "aws_apigatewayv2_integration" "example" {
 
 resource "aws_apigatewayv2_route" "example_route" {
   api_id    = aws_apigatewayv2_api.example.id
-  route_key = "ANY /{proxy+}"
+  route_key = "ANY /example_resource"  # Change the route key here
   target    = "integrations/${aws_apigatewayv2_integration.example.id}"
 }
 
@@ -85,6 +85,18 @@ resource "aws_apigatewayv2_stage" "example" {
   name          = "test"
   auto_deploy   = true
   deployment_id = aws_apigatewayv2_deployment.example.id
+}
+
+output "api_gateway_url" {
+  value = aws_apigatewayv2_api.example.api_endpoint
+}
+
+output "lambda_function_arn" {
+  value = aws_lambda_function.example.arn
+}
+
+output "api_endpoint" {
+  value = aws_apigatewayv2_api.example.api_endpoint
 }
 
 
