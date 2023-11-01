@@ -2,55 +2,6 @@ provider "aws" {
   region = var.aws_region
 }
 
-resource "aws_vpc" "example" {
-  cidr_block = var.vpc_cidr_block
-  tags = {
-    Name = "MY-VPC"
-  }
-}
-
-resource "aws_subnet" "public" {
-  vpc_id     = aws_vpc.example.id
-  cidr_block = var.public_subnet_cidr_block
-  tags = {
-    Name = "PUBLIC-SUB"
-  }
-}
-
-resource "aws_internet_gateway" "example" {
-  vpc_id = aws_vpc.example.id
-  tags = {
-    Name = "INGW"
-  }
-}
-
-resource "aws_route_table" "public" {
-  vpc_id = aws_vpc.example.id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.example.id
-  }
-  tags = {
-    Name = "RTB"
-  }
-}
-
-resource "aws_route_table_association" "public" {
-  subnet_id      = aws_subnet.public.id
-  route_table_id = aws_route_table.public.id
-}
-
-resource "aws_eip" "example" {}
-
-resource "aws_nat_gateway" "example" {
-  allocation_id = aws_eip.example.id
-  subnet_id     = aws_subnet.public.id
-  tags = {
-    Name = "NATGW"
-  }
-}
-
 data "archive_file" "lambda_zip" {
   type        = "zip"
   source_dir  = "${path.module}/python/"
@@ -118,6 +69,12 @@ resource "aws_apigatewayv2_integration" "example" {
   integration_method = "POST"
 }
 
+resource "aws_apigatewayv2_route" "example_route" {
+  api_id    = aws_apigatewayv2_api.example.id
+  route_key = "ANY /{proxy+}"
+  target    = "integrations/${aws_apigatewayv2_integration.example.id}"
+}
+
 resource "aws_apigatewayv2_deployment" "example" {
   api_id      = aws_apigatewayv2_api.example.id
   description = "Example deployment"
@@ -128,12 +85,6 @@ resource "aws_apigatewayv2_stage" "example" {
   name            = "test"
   auto_deploy     = true
   deployment_id   = aws_apigatewayv2_deployment.example.id
-}
-
-resource "aws_apigatewayv2_route" "example_route" {
-  api_id    = aws_apigatewayv2_api.example.id
-  route_key = "GET /myresource"
-  target    = "integrations/${aws_apigatewayv2_integration.example.id}"
 }
 
 terraform {
