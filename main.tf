@@ -97,11 +97,3 @@ terraform {
 }
 
 
-terraform {
-  required_version = ">= 1.0.0"
-  backend "s3" {
-    bucket = "terraformstatfile"
-    key    = "terraform.tfstate"
-    region = "us-east-1"
-  }
-}
