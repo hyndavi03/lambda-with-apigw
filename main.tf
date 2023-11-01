@@ -118,10 +118,6 @@ resource "aws_apigatewayv2_integration" "example" {
   integration_method = "POST"
 }
 
-resource "aws_apigatewayv2_stage" "example" {
-  api_id = aws_apigatewayv2_api.example.id
-  name   = "test"
-}
 
 resource "aws_apigatewayv2_stage" "example" {
   api_id          = aws_apigatewayv2_api.example.id
