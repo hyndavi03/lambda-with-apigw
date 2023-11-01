@@ -9,7 +9,7 @@ data "archive_file" "lambda_zip" {
 }
 
 resource "aws_lambda_function" "example" {
-  function_name = "MyLambdaFunction"
+  function_name = "MyLambdafunction"
   filename      = data.archive_file.lambda_zip.output_path
   role          = aws_iam_role.lambda_exec.arn
   handler       = "lambda_function.lambda_handler"
@@ -75,7 +75,6 @@ resource "aws_apigatewayv2_route" "example_route" {
   target    = "integrations/${aws_apigatewayv2_integration.example.id}"
 }
 
-
 resource "aws_apigatewayv2_deployment" "example" {
   api_id      = aws_apigatewayv2_api.example.id
   description = "Example deployment"
@@ -83,11 +82,10 @@ resource "aws_apigatewayv2_deployment" "example" {
 
 resource "aws_apigatewayv2_stage" "example" {
   api_id        = aws_apigatewayv2_api.example.id
-  name          = "$default"  # Setting the stage to default
+  name          = "test"
   auto_deploy   = true
   deployment_id = aws_apigatewayv2_deployment.example.id
 }
-
 
 
 terraform {
