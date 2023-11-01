@@ -71,7 +71,7 @@ resource "aws_apigatewayv2_integration" "example" {
 
 resource "aws_apigatewayv2_route" "example_route" {
   api_id    = aws_apigatewayv2_api.example.id
-  route_key = "ANY /example_resource"  # Change the route key here
+  route_key = "GET /myresource"  # Adjust this to the desired route path
   target    = "integrations/${aws_apigatewayv2_integration.example.id}"
 }
 
