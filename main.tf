@@ -53,7 +53,7 @@ resource "aws_nat_gateway" "example" {
 
 data "archive_file" "lambda_zip" {
   type        = "zip"
-  source_dir  = "${path.module}/python/"  
+  source_dir  = "${path.module}/python/"
   output_path = "${path.module}/python/lambda_function.zip"
 }
 
@@ -124,15 +124,15 @@ resource "aws_apigatewayv2_route" "example" {
   target    = "integrations/${aws_apigatewayv2_integration.example.id}"
 }
 
-resource "aws_apigatewayv2_deployment" "example" {
-  api_id = aws_apigatewayv2_api.example.id
-  description = "Example deployment"
-}
-
 resource "aws_apigatewayv2_stage" "example" {
   api_id = aws_apigatewayv2_api.example.id
   name   = "test"
-  deployment_id = aws_apigatewayv2_deployment.example.id
+}
+
+resource "aws_apigatewayv2_route" "example_route" {
+  api_id    = aws_apigatewayv2_api.example.id
+  route_key = "GET /myresource"
+  target    = "integrations/${aws_apigatewayv2_integration.example.id}"
 }
 
 terraform {
