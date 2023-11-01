@@ -91,7 +91,7 @@ resource "aws_apigatewayv2_integration" "example" {
   api_id             = aws_apigatewayv2_api.example.id
   integration_type   = "AWS_PROXY"
   integration_uri    = aws_lambda_function.example.invoke_arn
-  integration_method = "POST"
+  integration_method = "GET"
 }
 
 resource "aws_apigatewayv2_route" "example" {
@@ -99,6 +99,14 @@ resource "aws_apigatewayv2_route" "example" {
   route_key = "$default"
   target    = "integrations/${aws_apigatewayv2_integration.example.id}"
 }
+
+resource "aws_apigatewayv2_stage" "example" {
+  api_id = aws_apigatewayv2_api.example.id
+  name   = "test"
+
+  deployment_id = aws_apigatewayv2_deployment.example.id
+}
+
 
 resource "aws_iam_role" "lambda_exec" {
   name = "lambda-exec-role"
