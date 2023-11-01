@@ -75,6 +75,7 @@ resource "aws_apigatewayv2_route" "example_route" {
   target    = "integrations/${aws_apigatewayv2_integration.example.id}"
 }
 
+
 resource "aws_apigatewayv2_deployment" "example" {
   api_id      = aws_apigatewayv2_api.example.id
   description = "Example deployment"
