@@ -71,7 +71,7 @@ resource "aws_apigatewayv2_integration" "example" {
 
 resource "aws_apigatewayv2_route" "example_route" {
   api_id    = aws_apigatewayv2_api.example.id
-  route_key = "ANY /myresource"  # Change this path to the desired endpoint path
+  route_key = "ANY /{proxy+}"
   target    = "integrations/${aws_apigatewayv2_integration.example.id}"
 }
 
@@ -87,6 +87,7 @@ resource "aws_apigatewayv2_stage" "example" {
   deployment_id = aws_apigatewayv2_deployment.example.id
 }
 
+
 terraform {
   required_version = ">= 1.0.0"
   backend "s3" {
@@ -95,5 +96,3 @@ terraform {
     region = "us-east-1"
   }
 }
-
-
