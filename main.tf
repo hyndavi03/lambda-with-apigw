@@ -17,14 +17,6 @@ resource "aws_subnet" "public" {
   }
 }
 
-resource "aws_subnet" "private" {
-  vpc_id     = aws_vpc.example.id
-  cidr_block = var.private_subnet_cidr_block
-  tags = {
-    Name = "PRIVATE-SUB"
-  }
-}
-
 resource "aws_internet_gateway" "example" {
   vpc_id = aws_vpc.example.id
   tags = {
@@ -49,6 +41,8 @@ resource "aws_route_table_association" "public" {
   route_table_id = aws_route_table.public.id
 }
 
+resource "aws_eip" "example" {}
+
 resource "aws_nat_gateway" "example" {
   allocation_id = aws_eip.example.id
   subnet_id     = aws_subnet.public.id
@@ -57,14 +51,11 @@ resource "aws_nat_gateway" "example" {
   }
 }
 
-resource "aws_eip" "example" {}
-
 data "archive_file" "lambda_zip" {
   type        = "zip"
-  source_dir  = "${path.module}/python/"  # Path to the directory containing your Lambda code
+  source_dir  = "${path.module}/python/"  
   output_path = "${path.module}/python/lambda_function.zip"
 }
-
 
 resource "aws_lambda_function" "example" {
   function_name = "MyLambdafunction"
@@ -74,43 +65,8 @@ resource "aws_lambda_function" "example" {
   runtime       = "python3.8"
 }
 
-resource "aws_apigatewayv2_api" "example" {
-  name          = "example_api"
-  protocol_type = "HTTP"
-}
-
-resource "aws_lambda_permission" "allow_apigateway_invoke" {
-  statement_id  = "AllowExecutionFromAPIGateway"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.example.function_name
-  principal     = "apigateway.amazonaws.com"
-  source_arn    = aws_apigatewayv2_api.example.execution_arn
-}
-
-resource "aws_apigatewayv2_integration" "example" {
-  api_id             = aws_apigatewayv2_api.example.id
-  integration_type   = "AWS_PROXY"
-  integration_uri    = aws_lambda_function.example.invoke_arn
-  integration_method = "GET"
-}
-
-resource "aws_apigatewayv2_route" "example" {
-  api_id    = aws_apigatewayv2_api.example.id
-  route_key = "$default"
-  target    = "integrations/${aws_apigatewayv2_integration.example.id}"
-}
-
-resource "aws_apigatewayv2_stage" "example" {
-  api_id = aws_apigatewayv2_api.example.id
-  name   = "test"
-
-  deployment_id = aws_apigatewayv2_deployment.example.id
-}
-
-
 resource "aws_iam_role" "lambda_exec" {
   name = "lambda-exec-role"
-
   assume_role_policy = jsonencode({
     Version   = "2012-10-17"
     Statement = [
@@ -142,10 +98,48 @@ resource "aws_iam_role" "api_gateway_role" {
   })
 }
 
+resource "aws_apigatewayv2_api" "example" {
+  name          = "example_api"
+  protocol_type = "HTTP"
+}
+
+resource "aws_lambda_permission" "allow_apigateway_invoke" {
+  statement_id  = "AllowExecutionFromAPIGateway"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.example.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = aws_apigatewayv2_api.example.execution_arn
+}
+
+resource "aws_apigatewayv2_integration" "example" {
+  api_id             = aws_apigatewayv2_api.example.id
+  integration_type   = "AWS_PROXY"
+  integration_uri    = aws_lambda_function.example.invoke_arn
+  integration_method = "POST"
+}
+
+resource "aws_apigatewayv2_route" "example" {
+  api_id    = aws_apigatewayv2_api.example.id
+  route_key = "$default"
+  target    = "integrations/${aws_apigatewayv2_integration.example.id}"
+}
+
+resource "aws_apigatewayv2_deployment" "example" {
+  api_id = aws_apigatewayv2_api.example.id
+  description = "Example deployment"
+}
+
+resource "aws_apigatewayv2_stage" "example" {
+  api_id = aws_apigatewayv2_api.example.id
+  name   = "test"
+  deployment_id = aws_apigatewayv2_deployment.example.id
+}
+
 terraform {
+  required_version = ">= 1.0.0"
   backend "s3" {
-    bucket = "terraformstatfile"  # Replace with your bucket name
+    bucket = "terraformstatfile"
     key    = "terraform.tfstate"
-    region = "us-east-1"  # Replace with your preferred region
+    region = "us-east-1"
   }
 }
