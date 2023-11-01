@@ -69,11 +69,6 @@ resource "aws_apigatewayv2_integration" "example" {
   integration_method = "POST"
 }
 
-resource "aws_apigatewayv2_route" "example_route" {
-  api_id    = aws_apigatewayv2_api.example.id
-  route_key = "GET /myresource"  # Adjust this to the desired route path
-  target    = "integrations/${aws_apigatewayv2_integration.example.id}"
-}
 
 resource "aws_apigatewayv2_deployment" "example" {
   api_id      = aws_apigatewayv2_api.example.id
