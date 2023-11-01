@@ -81,8 +81,18 @@ resource "aws_apigatewayv2_deployment" "example" {
 }
 
 resource "aws_apigatewayv2_stage" "example" {
-  api_id          = aws_apigatewayv2_api.example.id
-  name            = "test"
-  auto_deploy     = true
-  deployment_id   = aws_apigatewayv2_deployment.example.id
+  api_id        = aws_apigatewayv2_api.example.id
+  name          = "test"
+  auto_deploy   = true
+  deployment_id = aws_apigatewayv2_deployment.example.id
+}
+
+
+terraform {
+  required_version = ">= 1.0.0"
+  backend "s3" {
+    bucket = "terraformstatfile"
+    key    = "terraform.tfstate"
+    region = "us-east-1"
+  }
 }
