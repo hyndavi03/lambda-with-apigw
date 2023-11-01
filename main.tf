@@ -9,7 +9,7 @@ data "archive_file" "lambda_zip" {
 }
 
 resource "aws_lambda_function" "example" {
-  function_name = "MyLambdafunction"
+  function_name = "MyLambdaFunction"
   filename      = data.archive_file.lambda_zip.output_path
   role          = aws_iam_role.lambda_exec.arn
   handler       = "lambda_function.lambda_handler"
